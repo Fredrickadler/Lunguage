@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WordFlow Cyber Deck v15</title>
-    <script src="words.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;900&family=Syncopate:wght@700&family=Vazirmatn:wght@500;700;950&display=swap" rel="stylesheet">
-
+    
     <style>
         body {
             font-family: 'Vazirmatn', sans-serif;
@@ -306,7 +305,12 @@
         const _SU_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWN0Z2hqZGd5cW5xbXNvcGZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTA2ODEsImV4cCI6MjA5NjE2NjY4MX0.Pa4hotBxR6FGU7da7h76sW8q1lyBOMEhImGZojAeSbY";
         const supabaseClient = supabase.createClient(_SU_URL, _SU_KEY);
 
-
+        const wordDatabase = [
+            { id: "1", word: "Accomplish", faTranslation: "به سرانجام رساندن", partOfSpeech: "Verb", frequencyRank: 1, exampleEn: "We can accomplish anything if we work together.", exampleFa: "ما می‌توانیم هر کاری را انجام دهیم اگر با هم کار کنیم.", hint: "کامل کردن کاری تا انتها؛ زمانی که ماموریتی را با موفقیت تمام می‌کنی.", sentenceEn: "She managed to ____ her goals after months of hard work.", sentenceFa: "او موفق شد پس از ماه‌ها تلاش سخت، اهداف خود را به سرانجام برساند.", imageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=80" },
+            { id: "2", word: "Constant", faTranslation: "مداوم و ثابت", partOfSpeech: "Adjective", frequencyRank: 2, exampleEn: "The device needs a constant supply of power.", exampleFa: "دستگاه به منبع تغذیه مداوم برق نیاز دارد.", hint: "مربوط به چیزی است که هرگز متوقف نمی‌شود و تغییر نمی‌کند.", sentenceEn: "The device requires a ____ flow of electricity to function.", sentenceFa: "دستگاه برای کار کردن به جریان مداوم و ثابت برق نیاز دارد.", imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80" },
+            { id: "3", word: "Determine", faTranslation: "تعیین کردن", partOfSpeech: "Verb", frequencyRank: 3, exampleEn: "Your attitude will determine your future.", exampleFa: "نگرش شما آینده شما را تعیین خواهد کرد.", hint: "وقتی تصمیم قطعی چیزی رو مشخص می‌کنی.", sentenceEn: "Upbringing can greatly ____ a person's behavior.", sentenceFa: "تربیت می‌تواند تا حد زیادی رفتار یک فرد را تعیین کند.", imageUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=400&q=80" },
+            { id: "4", word: "Maintain", faTranslation: "حفظ کردن", partOfSpeech: "Verb", frequencyRank: 4, exampleEn: "You must maintain a safe speed on highways.", exampleFa: "شما باید سرعت امن را در بزرگراه‌ها حفظ کنید.", hint: "نگه داشتن یک وضعیت در همان حالت خوب فعلی.", sentenceEn: "It is hard to ____ a healthy lifestyle during exams.", sentenceFa: "حفظ کردن یک سبک زندگی سالم در طول امتحانات کار سختی است.", imageUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" }
+        ];
 
         // ساختار جدید اطلاعات به تفکیک لغات یادگرفته و یادنگرفته
         let appState = { xp: 0, streak: 0, learnedIds: [], unlearnedIds: [], playedMatrixIds: [] };

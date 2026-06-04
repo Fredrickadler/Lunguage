@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WordFlow Cyber Deck v11</title>
+    <title>WordFlow Cyber Deck v12</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,13 +51,15 @@
 
     <div class="w-full max-w-6xl z-10 space-y-6">
         
+        <!-- HEADER -->
         <header class="flex justify-between items-center metal-deck px-6 py-4 rounded-2xl w-full">
             <span class="text-md font-black tracking-widest text-white cyber-word-font">
                 WORD<span class="text-[#a3e635]">FLOW</span>
             </span>
             <div class="flex items-center gap-3 font-mono text-xs" dir="ltr">
-                <div class="relative">
-                    <img id="user-avatar-btn" onclick="triggerAuthFlow()" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="User Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-slate-800 cursor-pointer hover:ring-[#a3e635] transition">
+                <div class="relative flex items-center gap-2">
+                    <span id="username-display" class="text-slate-400 font-sans hidden">Guest</span>
+                    <img id="user-avatar-btn" onclick="toggleAuthModal(true)" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="User Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-slate-800 cursor-pointer hover:ring-[#a3e635] transition">
                     <span id="auth-status-dot" class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-black"></span>
                 </div>
                 
@@ -70,6 +72,42 @@
             </div>
         </header>
 
+        <!-- ================= AUTH MODAL (پنجره ورود و ثبت نام) ================= -->
+        <div id="auth-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="metal-deck w-full max-w-md p-8 rounded-3xl border border-slate-800 space-y-6 relative text-right" dir="rtl">
+                <button onclick="toggleAuthModal(false)" class="absolute top-4 left-4 text-slate-500 hover:text-white font-bold cursor-pointer">✕</button>
+                
+                <div class="text-center space-y-1">
+                    <h3 id="modal-title" class="text-xl font-black text-white">ورود به حساب کاربری</h3>
+                    <p id="modal-desc" class="text-xs text-slate-400">نام کاربری و رمز عبور خود را وارد کنید.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs text-slate-400 font-bold">نام کاربری</label>
+                        <input id="auth-username" type="text" placeholder="مثلا: reza_cyber" class="w-full bg-[#04060b] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-[#a3e635] text-left font-mono" dir="ltr">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-slate-400 font-bold">رمز عبور</label>
+                        <input id="auth-password" type="password" placeholder="••••••••" class="w-full bg-[#04060b] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-[#a3e635] text-left font-mono" dir="ltr">
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <button id="auth-main-btn" onclick="handleSubmitAuth()" class="w-full py-3.5 rounded-xl bg-[#a3e635] text-black font-black text-sm shadow-lg hover:bg-[#bbf746] transition cursor-pointer">
+                        ورود به ماتریکس
+                    </button>
+                    <button id="auth-toggle-mode" onclick="switchAuthMode()" class="w-full text-center text-xs text-blue-400 font-bold hover:underline cursor-pointer">
+                        حساب کاربری ندارید؟ ثبت نام کنید
+                    </button>
+                    <button id="logout-btn" onclick="handleLogout()" class="w-full text-center text-xs text-rose-400 font-bold hover:underline cursor-pointer hidden">
+                        خروج از حساب کاربری الحالي
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= DASHBOARD VIEW ================= -->
         <main id="dashboard-view" class="space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 metal-deck p-8 rounded-[32px] flex flex-col justify-between min-h-[380px]">
@@ -95,6 +133,7 @@
                     </div>
                 </div>
 
+                <!-- مانیتور ماتریکس -->
                 <div class="metal-deck p-6 rounded-[32px] flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-center mb-4">
@@ -139,6 +178,7 @@
                 </div>
             </div>
 
+            <!-- لانچر مینی‌گیم -->
             <section class="metal-deck rounded-[32px] overflow-hidden grid grid-cols-1 md:grid-cols-3 items-center border border-purple-500/10">
                 <div class="md:col-span-1 h-48 bg-gradient-to-br from-purple-900/30 to-indigo-950/40 relative flex items-center justify-center border-l border-[#0f1524]">
                     <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#a3e635_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -161,6 +201,7 @@
             </section>
         </main>
 
+        <!-- ================= MINI GAME VIEW ================= -->
         <section id="game-view" class="hidden max-w-2xl mx-auto space-y-6">
             <div class="flex justify-between items-center">
                 <button onclick="exitToDashboard()" class="p-2 rounded-xl bg-[#06090f] border border-slate-800 text-slate-400 hover:text-white transition cursor-pointer flex items-center gap-2 text-xs font-bold">
@@ -189,6 +230,7 @@
             </div>
         </section>
 
+        <!-- ================= LEARNING VIEW ================= -->
         <section id="learning-view" class="hidden max-w-xl mx-auto space-y-6">
             <div class="flex justify-between items-center">
                 <button onclick="exitToDashboard()" class="text-xs font-bold text-slate-500 hover:text-white cursor-pointer">← انصراف</button>
@@ -230,6 +272,7 @@
             </button>
         </section>
 
+        <!-- ================= EXAM VIEW ================= -->
         <section id="exam-view" class="hidden max-w-2xl mx-auto space-y-5">
             <div class="flex justify-between items-center">
                 <span class="text-xs font-black text-rose-500 tracking-wider font-mono">MATRIX EXAM</span>
@@ -260,11 +303,11 @@
 
     </div>
 
+    <!-- ================= CORE ENGINE LOGIC ================= -->
     <script>
-        // اتصال مستقیم و امن فرانت‌اند به پایگاه داده Supabase شما
         const _SU_URL = "https://kimctghjdgyqnqmsopfe.supabase.co";
         const _SU_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWN0Z2hqZGd5cW5xbXNvcGZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTA2ODEsImV4cCI6MjA5NjE2NjY4MX0.Pa4hotBxR6FGU7da7h76sW8q1lyBOMEhImGZojAeSbY";
-        const supabase = supabase.createClient(_SU_URL, _SU_KEY);
+        const supabaseClient = supabase.createClient(_SU_URL, _SU_KEY);
 
         const wordDatabase = [
             { id: "1", word: "Accomplish", faTranslation: "به سرانجام رساندن", partOfSpeech: "Verb", frequencyRank: 1, exampleEn: "We can accomplish anything if we work together.", exampleFa: "ما می‌توانیم هر کاری را انجام دهیم اگر با هم کار کنیم.", hint: "کامل کردن کاری تا انتها؛ زمانی که ماموریتی را با موفقیت تمام می‌کنی.", sentenceEn: "She managed to ____ her goals after months of hard work.", sentenceFa: "او موفق شد پس از ماه‌ها تلاش سخت، اهداف خود را به سرانجام برساند.", imageUrl: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=80" },
@@ -273,9 +316,9 @@
             { id: "4", word: "Maintain", faTranslation: "حفظ کردن", partOfSpeech: "Verb", frequencyRank: 4, exampleEn: "You must maintain a safe speed on highways.", exampleFa: "شما باید سرعت امن را در بزرگراه‌ها حفظ کنید.", hint: "نگه داشتن یک وضعیت در همان حالت خوب فعلی.", sentenceEn: "It is hard to ____ a healthy lifestyle during exams.", sentenceFa: "حفظ کردن یک سبک زندگی سالم در طول امتحانات کار سختی است.", imageUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" }
         ];
 
-        // مقادیر اولیه لوکال (اگر کابر متصل نشد به عنوان دمو کار کند)
-        let appState = { xp: 120, streak: 3, learnedIds: ["1"] };
+        let appState = { xp: 0, streak: 0, learnedIds: [] };
         let currentUserUUID = null;
+        let authMode = "login"; // یا signup
 
         let currentLearnQueue = [];
         let currentLearnIndex = 0;
@@ -283,7 +326,6 @@
         let currentExamIndex = 0;
         let isCardFlippedToBack = false;
 
-        const examTemplates = [{ class: "bg-zinc-900 border-zinc-800 text-zinc-200" }];
         const gameButtonColors = [
             { base: "bg-emerald-950/40 border-emerald-800 text-emerald-300" },
             { base: "bg-blue-950/40 border-blue-900 text-blue-300" },
@@ -291,9 +333,8 @@
             { base: "bg-zinc-900/60 border-zinc-800 text-zinc-300" }
         ];
 
-        // بررسی وضعیت لاگین به محض لود شدن صفحه
         async function initApp() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session && session.user) {
                 bindUser(session.user);
             } else {
@@ -301,36 +342,127 @@
             }
         }
 
-        // ورود ناشناس هوشمند برای سهولت اتصال مستقیم به دیتابیس بدون فرم شلوغ
-        async function triggerAuthFlow() {
-            if (currentUserUUID) {
-                alert("شما هم‌اکنون به دیتابیس Supabase متصل هستید و داده‌هایتان به صورت ابری ذخیره می‌شوند.");
+        // مدیریت باز و بسته شدن مودال
+        function toggleAuthModal(show) {
+            const modal = document.getElementById('auth-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                // اگر کاربر از قبل وارد شده بود، دکمه خروج رو نشون بده
+                if (currentUserUUID) {
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                    document.getElementById('auth-main-btn').classList.add('hidden');
+                } else {
+                    document.getElementById('logout-btn').classList.add('hidden');
+                    document.getElementById('auth-main-btn').classList.remove('hidden');
+                }
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // تغییر حالت بین ورود و ثبت نام
+        function switchAuthMode() {
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const mainBtn = document.getElementById('auth-main-btn');
+            const toggleBtn = document.getElementById('auth-toggle-mode');
+
+            if (authMode === "login") {
+                authMode = "signup";
+                title.innerText = "ساخت حساب کاربری جدید";
+                desc.innerText = "یک نام کاربری و رمز عبور منحصر به فرد انتخاب کنید.";
+                mainBtn.innerText = "ایجاد حساب و ورود";
+                toggleBtn.innerText = "قبلاً ثبت نام کرده‌اید؟ وارد شوید";
+            } else {
+                authMode = "login";
+                title.innerText = "ورود به حساب کاربری";
+                desc.innerText = "نام کاربری و رمز عبور خود را وارد کنید.";
+                mainBtn.innerText = "ورود به ماتریکس";
+                toggleBtn.innerText = "حساب کاربری ندارید؟ ثبت نام کنید";
+            }
+        }
+
+        // هندل کردن اکشن دکمه اصلی مودال (ثبت نام یا ورود)
+        async function handleSubmitAuth() {
+            const usernameInput = document.getElementById('auth-username').value.trim();
+            const passwordInput = document.getElementById('auth-password').value;
+
+            if (!usernameInput || !passwordInput) {
+                alert("لطفاً تمامی فیلدها را پر کنید.");
                 return;
             }
-            const { data, error } = await supabase.auth.signInAnonymously();
-            if (error) {
-                alert("خطا در اتصال به سرور دیتابیس: " + error.message);
-            } else if (data.user) {
-                bindUser(data.user);
-                alert("اتصال ابری با موفقیت برقرار شد! حساب کاربری شما ساخته شد.");
+            if (passwordInput.length < 6) {
+                alert("رمز عبور باید حداقل ۶ کاراکتر باشد.");
+                return;
             }
+
+            // تبدیل یوزرنیم به فرمت ایمیل مجازی برای سوپابیس
+            const virtualEmail = `${usernameInput.toLowerCase()}@wordflow.io`;
+
+            if (authMode === "signup") {
+                // عملیات ثبت نام
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: virtualEmail,
+                    password: passwordInput,
+                    options: { data: { display_username: usernameInput } }
+                });
+
+                if (error) {
+                    alert("خطا در ثبت نام: " + error.message);
+                } else if (data.user) {
+                    alert("ثبت نام با موفقیت انجام شد!");
+                    bindUser(data.user);
+                    toggleAuthModal(false);
+                }
+            } else {
+                // عملیات ورود
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: virtualEmail,
+                    password: passwordInput
+                });
+
+                if (error) {
+                    alert("نام کاربری یا رمز عبور اشتباه است.");
+                } else if (data.user) {
+                    bindUser(data.user);
+                    toggleAuthModal(false);
+                }
+            }
+        }
+
+        // خروج از حساب
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            currentUserUUID = null;
+            appState = { xp: 0, streak: 0, learnedIds: [] };
+            
+            document.getElementById('auth-status-dot').className = "absolute bottom-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-black";
+            document.getElementById('connection-status').className = "bg-rose-500/10 text-rose-400 border border-rose-500/20 px-3 py-1 rounded-md text-[10px] font-bold tracking-widest";
+            document.getElementById('connection-status').innerText = "OFFLINE MODE (CLICK AVATAR TO LOGIN)";
+            document.getElementById('username-display').classList.add('hidden');
+            
+            toggleAuthModal(false);
+            syncUI();
+            alert("از حساب کاربری خارج شدید.");
         }
 
         async function bindUser(user) {
             currentUserUUID = user.id;
+            const shownName = user.user_metadata?.display_username || user.email.split('@')[0];
+            
+            document.getElementById('username-display').innerText = shownName;
+            document.getElementById('username-display').classList.remove('hidden');
             document.getElementById('auth-status-dot').className = "absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-black";
             document.getElementById('connection-status').className = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-md text-[10px] font-bold tracking-widest";
             document.getElementById('connection-status').innerText = "CLOUD DATABASE SYNCED";
             
-            // خواندن مشخصات از جدول بسط یافته
-            let { data, error } = await supabase.from('user_profiles').select('xp, streak, learned_ids').eq('id', user.id).maybeSingle();
+            let { data, error } = await supabaseClient.from('user_profiles').select('xp, streak, learned_ids').eq('id', user.id).maybeSingle();
             if (data) {
                 appState.xp = data.xp;
                 appState.streak = data.streak;
                 appState.learnedIds = data.learned_ids || [];
             } else {
-                // اگر ردیف ساخته نشده بود، مقدار فعلی رو درج کن
-                await supabase.from('user_profiles').insert({ id: user.id, xp: appState.xp, streak: appState.streak, learned_ids: appState.learnedIds });
+                await supabaseClient.from('user_profiles').insert({ id: user.id, xp: appState.xp, streak: appState.streak, learned_ids: appState.learnedIds });
             }
             syncUI();
         }
@@ -338,7 +470,7 @@
         async function pushStateToCloud() {
             syncUI();
             if (!currentUserUUID) return;
-            await supabase.from('user_profiles').update({
+            await supabaseClient.from('user_profiles').update({
                 xp: appState.xp,
                 streak: appState.streak,
                 learned_ids: appState.learnedIds,
@@ -538,7 +670,6 @@
             }
         }
 
-        // اجرای موتور اولیه برنامه
         initApp();
     </script>
 </body>

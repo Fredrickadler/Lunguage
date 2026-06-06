@@ -3,460 +3,713 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سامانه آموزش زبان انگلیسی</title>
-    <!-- Tailwind CSS & FontAwesome -->
+    <title>WordFlow Cyber Deck v15</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- اتصال به فایل دیتابیس کلمات شما -->
     <script src="words.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;900&family=Syncopate:wght@700&family=Vazirmatn:wght@500;700;950&display=swap" rel="stylesheet">
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&display=swap');
-        body { font-family: 'Vazirmatn', sans-serif; }
-        /* استایل سفارشی برای اسکرول‌بار روان در موبایل */
-        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #030508;
+            min-height: 100vh;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .cyber-word-font {
+            font-family: 'Syncopate', 'Space Grotesk', sans-serif;
+            letter-spacing: -0.5px;
+        }
+        .game-card-wavy {
+            clip-path: polygon(0% 0%, 100% 0%, 100% 88%, 88% 96%, 50% 90%, 12% 96%, 0% 88%);
+            border-radius: 28px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        @keyframes cyberFloat {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        .animated-matrix-card { animation: cyberFloat 6s ease-in-out infinite; }
+        .animated-matrix-card:nth-child(2) { animation-delay: 2s; }
+        .game-card-wavy:hover { transform: translateY(-12px) scale(1.01); z-index: 40; }
+        .metal-deck { background: linear-gradient(145deg, #06090f, #020407); border: 1px solid #0f1524; }
+        .flip-container { perspective: 2000px; }
+        .flip-card-inner { transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card-inner.is-flipped { transform: rotateY(180deg); }
+        .card-front, .card-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 36px; }
+        .card-back { transform: rotateY(180deg); }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col pb-16 md:pb-0">
+<body class="p-4 md:p-8 flex flex-col items-center justify-start relative antialiased select-none pb-24 md:pb-8">
 
-    <!-- هدر اصلی و ریسپانسیو -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-200">
-                    <i class="fa-solid fa-graduation-cap text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="text-base font-bold text-slate-900 leading-tight">پلتفرم هوشمند زبان</h1>
-                    <p class="text-xs text-slate-500">نسخه بهینه شده موبایل</p>
-                </div>
-            </div>
-            
-            <!-- دکمه پروفایل / وضعیت اتصال -->
-            <div id="connectionStatus" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span id="statusText">متصل به دیتابیس</span>
-            </div>
-        </div>
-    </header>
+    <div class="absolute top-0 right-0 w-[600px] h-[500px] rounded-full bg-blue-600/5 blur-[150px] pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-[600px] h-[500px] rounded-full bg-[#a3e635]/5 blur-[150px] pointer-events-none"></div>
 
-    <!-- محتوای اصلی اپلیکیشن -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:py-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div class="w-full max-w-6xl z-10 space-y-6">
         
-        <!-- تب‌های کنترل (منوی کناری در دسکتاپ / منوی پایینی در موبایل) -->
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-1 flex justify-around z-50 lg:relative lg:bottom-auto lg:border-t-0 lg:bg-transparent lg:px-0 lg:py-0 lg:flex-col lg:justify-start lg:gap-2">
-            <button onclick="switchTab('dashboard')" class="nav-btn active flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-medium w-full transition-all text-indigo-600 bg-indigo-50 lg:bg-indigo-50/50">
-                <i class="fa-solid fa-house text-base"></i>
-                <span>داشبورد</span>
-            </button>
-            <button onclick="switchTab('flashcards')" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-medium w-full transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-layer-group text-base"></i>
-                <span>فلش‌کارت‌ها</span>
-            </button>
-            <button onclick="switchTab('matrix')" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-medium w-full transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-table-cells text-base"></i>
-                <span>مینی‌گیم ماتریکس</span>
-            </button>
-            <button onclick="switchTab('quiz')" class="nav-btn flex flex-col lg:flex-row items-center gap-1 lg:gap-3 px-3 py-2 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-medium w-full transition-all text-slate-600 hover:bg-slate-100">
-                <i class="fa-solid fa-clipboard-question text-base"></i>
-                <span>آزمون جامع</span>
-            </button>
-        </nav>
-		<!-- بخش نمایش صفحات (Sections) -->
-        <div class="lg:col-span-3 space-y-6">
+        <header class="flex justify-between items-center metal-deck px-4 md:px-6 py-4 rounded-2xl w-full">
+            <span class="text-md font-black tracking-widest text-white cyber-word-font">
+                WORD<span class="text-[#a3e635]">FLOW</span>
+            </span>
+            <div class="flex items-center gap-2 md:gap-3 font-mono text-xs" dir="ltr">
+                <div class="relative flex items-center gap-2">
+                    <span id="username-display" class="text-slate-400 font-sans hidden">Guest</span>
+                    <img id="user-avatar-btn" onclick="toggleAuthModal(true)" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="User Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-slate-800 cursor-pointer hover:ring-[#a3e635] transition">
+                    <span id="auth-status-dot" class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-black"></span>
+                </div>
+                
+                <div class="bg-[#04060b] px-2.5 py-2 md:px-4 rounded-xl text-[#a3e635] font-black border border-[#0f1524]">
+                    STREAK: <span id="user-streak">0</span>
+                </div>
+                <div class="bg-[#a3e635] px-2.5 py-2 md:px-4 rounded-xl text-black font-black shadow-md">
+                    XP: <span id="user-xp">0</span>
+                </div>
+            </div>
+        </header>
 
-            <!-- ۱. داشبورد -->
-            <section id="dashboard-section" class="tab-content space-y-6">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                        <div class="text-slate-400 text-xs mb-1">کل کلمات</div>
-                        <div id="totalWordsCount" class="text-xl font-bold text-slate-900">۰</div>
+        <div id="auth-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="metal-deck w-full max-w-md p-6 md:p-8 rounded-3xl border border-slate-800 space-y-6 relative text-right" dir="rtl">
+                <button onclick="toggleAuthModal(false)" class="absolute top-4 left-4 text-slate-500 hover:text-white font-bold cursor-pointer">✕</button>
+                
+                <div class="text-center space-y-1">
+                    <h3 id="modal-title" class="text-xl font-black text-white">ورود به حساب کاربری</h3>
+                    <p id="modal-desc" class="text-xs text-slate-400">نام کاربری و رمز عبور خود را وارد کنید.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs text-slate-400 font-bold">نام کاربری</label>
+                        <input id="auth-username" type="text" placeholder="مثلا: reza_cyber" class="w-full bg-[#04060b] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-[#a3e635] text-left font-mono" dir="ltr">
                     </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                        <div class="text-slate-400 text-xs mb-1">یاد گرفته شده</div>
-                        <div id="learnedCount" class="text-xl font-bold text-emerald-600">۰</div>
-                    </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                        <div class="text-slate-400 text-xs mb-1">امتیاز ماتریکس</div>
-                        <div id="matrixScore" class="text-xl font-bold text-amber-600">۰</div>
-                    </div>
-                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                        <div class="text-slate-400 text-xs mb-1">دقت آزمون</div>
-                        <div id="quizAccuracy" class="text-xl font-bold text-indigo-600">۰%</div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-slate-400 font-bold">رمز عبور</label>
+                        <input id="auth-password" type="password" placeholder="••••••••" class="w-full bg-[#04060b] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-[#a3e635] text-left font-mono" dir="ltr">
                     </div>
                 </div>
 
-                <div class="bg-white p-6 rounded-2xl border border-slate-200">
-                    <h3 class="text-base font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-500"></i> دسترسی سریع</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <button onclick="switchTab('flashcards')" class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-500 text-right transition-all flex items-center justify-between">
-                            <div>
-                                <div class="font-bold text-sm text-slate-900">مرور فلش‌کارت‌ها</div>
-                                <div class="text-xs text-slate-500 mt-0.5">مطالعه کلمات به همراه مثال و تصویر</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-left text-slate-400 text-xs"></i>
-                        </button>
-                        <button onclick="switchTab('matrix')" class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-500 text-right transition-all flex items-center justify-between">
-                            <div>
-                                <div class="font-bold text-sm text-slate-900">تمرین ماتریکس کلمات</div>
-                                <div class="text-xs text-slate-500 mt-0.5">اتصال کلمات انگلیسی به معانی فارسی</div>
-                            </div>
-                            <i class="fa-solid fa-chevron-left text-slate-400 text-xs"></i>
-                        </button>
-                    </div>
+                <div class="space-y-3 pt-2">
+                    <button id="auth-main-btn" onclick="handleSubmitAuth()" class="w-full py-3.5 rounded-xl bg-[#a3e635] text-black font-black text-sm shadow-lg hover:bg-[#bbf746] transition cursor-pointer">
+                        ورود به ماتریکس
+                    </button>
+                    <button id="auth-toggle-mode" onclick="switchAuthMode()" class="w-full text-center text-xs text-blue-400 font-bold hover:underline cursor-pointer">
+                        حساب کاربری ندارید؟ ثبت نام کنید
+                    </button>
+                    <button id="logout-btn" onclick="handleLogout()" class="w-full text-center py-3 rounded-xl bg-rose-950/20 text-rose-400 border border-rose-900/30 font-bold text-xs hover:bg-rose-950/50 transition cursor-pointer hidden">
+                        خروج از حساب کاربری
+                    </button>
                 </div>
-            </section>
-
-            <!-- ۲. فلش‌کارت‌ها -->
-            <section id="flashcards-section" class="tab-content hidden space-y-6">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200">
-                    <span class="text-sm text-slate-600 font-medium" id="cardProgress">کارت ۱ از ۱</span>
-                    <div class="flex w-full sm:w-auto gap-2">
-                        <button onclick="prevCard()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-all"><i class="fa-solid fa-arrow-right ml-2"></i>قبلی</button>
-                        <button onclick="nextCard()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-all">بعدی<i class="fa-solid fa-arrow-left mr-2"></i></button>
-                    </div>
-                </div>
-
-                <div class="relative w-full aspect-5/4 sm:aspect-16/10 cursor-pointer group" onclick="flipCard()">
-                    <div id="flashcard-inner" class="absolute w-full h-full transition-transform duration-500 transform-3d relative">
-                        <!-- روی کارت -->
-                        <div class="absolute w-full h-full bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between shadow-xs backface-hidden">
-                            <div class="flex justify-between items-start">
-                                <span class="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider" id="wordPos">POS</span>
-                                <button onclick="playVoice(event)" class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-600 transition-all"><i class="fa-solid fa-volume-high"></i></button>
-                            </div>
-                            <div class="text-center my-auto space-y-2">
-                                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight" id="wordEn">Word</h2>
-                                <p class="text-sm text-slate-400 italic" id="wordHint">راهنمایی کلمه در اینجا قرار می‌گیرد</p>
-                            </div>
-                            <div class="text-center text-xs text-slate-400 font-medium"><i class="fa-solid fa-rotate mr-1"></i> برای مشاهده معنی ضربه بزنید</div>
-                        </div>
-                        <!-- پشت کارت -->
-                        <div class="absolute w-full h-full bg-slate-900 text-white rounded-3xl p-6 flex flex-col justify-between shadow-xl backface-hidden rotate-y-180">
-                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                                <span class="text-xs text-slate-400 font-mono" id="wordRank">Rank: #1</span>
-                                <span class="text-xs text-indigo-400 bg-indigo-950/50 px-2 py-0.5 rounded-md border border-indigo-900/50">ترجمه فارسی</span>
-                            </div>
-                            <div class="text-center my-auto">
-                                <h3 class="text-2xl md:text-3xl font-bold text-indigo-300" id="wordFa">معنی فارسی</h3>
-                            </div>
-                            <div class="space-y-2 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60 text-right" dir="ltr">
-                                <p class="text-xs md:text-sm text-slate-300 font-medium" id="exEn">Example sentence goes here.</p>
-                                <p class="text-xs text-slate-400 text-right font-sans" dir="rtl" id="exFa">ترجمه مثال در این قسمت نمایش داده می‌شود.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ۳. مینی‌گیم ماتریکس کلمات -->
-            <section id="matrix-section" class="tab-content hidden space-y-4">
-                <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center text-white"><i class="fa-solid fa-gamepad"></i></div>
-                        <div>
-                            <h4 class="text-sm font-bold text-amber-900">ماتریکس اتصال کلمات</h4>
-                            <p class="text-xs text-amber-700 mt-0.5">کلمات انگلیسی سمت راست را به معنی فارسی سمت چپ متصل کنید.</p>
-                        </div>
-                    </div>
-                    <div class="text-sm font-mono font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-md" id="gameScoreDisplay">امتیاز: 0</div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2" id="matrixEnCol"></div>
-                    <div class="space-y-2" id="matrixFaCol"></div>
-                </div>
-                <button onclick="initMatrixGame()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl transition-all shadow-md">لود مجدد ماتریکس / کلمات جدید</button>
-            </section>
-
-            <!-- ۴. آزمون جامع ۴ گزینه‌ای -->
-            <section id="quiz-section" class="tab-content hidden space-y-6">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                    <div class="flex justify-between items-center text-xs text-slate-500">
-                        <span id="quizProgress">سوال ۱ از ۱۰</span>
-                        <span class="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md" id="quizScoreDisplay">صحیح: ۰ / غلط: ۰</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                        <div id="quizProgressBar" class="bg-indigo-600 h-full w-0 transition-all duration-300"></div>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
-                    <div class="space-y-2">
-                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">سوال جایخالی</span>
-                        <h3 class="text-lg font-bold text-slate-900 pt-1" id="quizQuestion" dir="ltr">Loading question...</h3>
-                        <p class="text-sm text-slate-400 font-sans" id="quizQuestionFa">ترجمه راهنمای جمله اینجا قرار می‌گیرد.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="quizOptions"></div>
-                </div>
-            </section>
-
+            </div>
         </div>
-    </main>
 
-    <!-- کامپوننت نوتیفیکیشن اختصاصی من و جایگزین متدهای alert -->
-    <div id="toast" class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs md:text-sm font-medium px-4 py-3 rounded-xl shadow-xl z-50 flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-        <i id="toastIcon" class="fa-solid fa-circle-info text-indigo-400"></i>
-        <span id="toastMessage">پیام سیستم</span>
+        <main id="dashboard-view" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 metal-deck p-6 md:p-8 rounded-[32px] flex flex-col justify-between min-h-[340px] md:min-h-[380px]">
+                    <div class="space-y-4">
+                        <span id="connection-status" class="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-3 py-1 rounded-md text-[10px] font-bold tracking-widest block w-max">
+                            OFFLINE MODE (CLICK AVATAR TO LOGIN)
+                        </span>
+                        <h1 class="text-2xl md:text-5xl font-black text-white leading-tight md:leading-none">
+                            یادگیری هوشمند لغات <br><span class="text-[#a3e635]">با متد ماتریکس اختصاصی</span>
+                        </h1>
+                        <p class="text-slate-400 text-xs md:text-sm leading-relaxed max-w-lg">
+                            محیط تعاملی پیشرفته مجهز به سیستم فیلترینگ کلمات یادگرفته شده و تاریخچه هوشمند مینی‌گیم ماتریکس.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                        <button onclick="startDailyFlow()" class="w-full sm:w-auto px-6 md:px-8 py-4 rounded-xl bg-[#a3e635] text-black font-black text-center hover:bg-[#bbf746] transition duration-200 cursor-pointer text-sm shadow-lg">
+                            شروع جلسه یادگیری (واژه‌های جدید)
+                        </button>
+                        <button onclick="startExamFlow()" class="w-full sm:w-auto px-5 md:px-6 py-4 rounded-xl bg-[#04060b] border border-[#0f1524] text-slate-400 text-center hover:bg-slate-900 transition duration-200 text-sm cursor-pointer">
+                            آزمون جامع کلمات فعال
+                        </button>
+                    </div>
+                </div>
+
+                <div class="metal-deck p-6 rounded-[32px] flex flex-col justify-between space-y-6 lg:space-y-0">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xs font-black tracking-wider text-slate-500">MONITOR MATRIX</h3>
+                            <span class="text-xs font-mono text-slate-400 text-left" id="total-learned-counter" dir="ltr">Learned: 0 | Remaining: 1</span>
+                        </div>
+                        
+                        <div class="space-y-[-32px] pt-2">
+                            <div class="game-card-wavy animated-matrix-card bg-[#a3e635] text-black p-5 md:p-6 pb-12 flex justify-between items-start shadow-xl z-10">
+                                <div>
+                                    <h4 class="font-black text-xl md:text-2xl cyber-word-font tracking-tight">ACCOMPLISH</h4>
+                                    <p class="text-xs opacity-70 font-bold mt-1">اولویت روزمره: رتبه #۱</p>
+                                </div>
+                                <div class="bg-black/10 px-2 py-0.5 rounded text-[10px] font-mono font-bold">BOX 5</div>
+                            </div>
+                            <div class="game-card-wavy animated-matrix-card bg-blue-600 text-white p-5 md:p-6 pb-12 flex justify-between items-start shadow-xl z-20">
+                                <div>
+                                    <h4 class="font-black text-xl md:text-2xl cyber-word-font tracking-tight">CONSTANT</h4>
+                                    <p class="text-xs opacity-80 font-bold mt-1">اولویت روزمره: رتبه #۲</p>
+                                </div>
+                                <div class="bg-white/10 px-2 py-0.5 rounded text-[10px] font-mono font-bold">BOX 2</div>
+                            </div>
+                            <div class="game-card-wavy bg-[#090d16] text-slate-400 p-5 md:p-6 flex justify-between items-start border border-[#141c2e] shadow-lg z-30">
+                                <div>
+                                    <h4 class="font-black text-xl md:text-2xl text-slate-300 cyber-word-font tracking-tight">DETERMINE</h4>
+                                    <p class="text-xs opacity-40 font-bold mt-1">اولویت روزمره: رتبه #۳</p>
+                                </div>
+                                <div class="bg-slate-800 px-2 py-0.5 rounded text-[10px] font-mono">ACTIVE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-[#0f1524] space-y-2">
+                        <div class="flex justify-between text-xs text-slate-500 font-mono">
+                            <span>PROGRESS RATE:</span>
+                            <span class="text-[#a3e635] font-bold" id="completion-ratio-text">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-[#06090f] rounded-full overflow-hidden border border-[#141d30]">
+                            <div id="completion-bar" class="h-full bg-[#a3e635] shadow-[0_0_10px_#a3e635] transition-all duration-500" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="metal-deck rounded-[32px] overflow-hidden grid grid-cols-1 md:grid-cols-3 items-center border border-purple-500/10">
+                <div class="md:col-span-1 h-36 md:h-48 bg-gradient-to-br from-purple-900/30 to-indigo-950/40 relative flex items-center justify-center border-b md:border-b-0 md:border-l border-[#0f1524]">
+                    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#a3e635_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                    <svg class="w-16 h-16 md:w-20 md:h-20 text-purple-400 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                </div>
+                <div class="p-6 md:p-8 md:col-span-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 md:gap-6">
+                    <div class="space-y-2">
+                        <span class="text-[10px] bg-purple-500/10 text-purple-400 font-mono font-bold border border-purple-500/20 px-2.5 py-1 rounded">MINI GAME MODE</span>
+                        <h3 class="text-lg md:text-xl font-black text-white">ماتریکس جمله‌سازی تعاملی</h3>
+                        <p class="text-xs text-slate-400 max-w-md leading-relaxed">
+                            سوالات پاسخ‌داده شده در سرور ذخیره شده و دیگر برای شما نمایش داده نخواهند شد.
+                        </p>
+                    </div>
+                    <button onclick="switchToGameView()" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-sm transition-all duration-300 transform hover:scale-105 shadow-xl shadow-purple-900/30 cursor-pointer border border-purple-400/20 text-center">
+                        Play Game
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <section id="game-view" class="hidden max-w-2xl mx-auto space-y-6">
+            <div class="flex justify-between items-center">
+                <button onclick="exitToDashboard()" class="p-2 rounded-xl bg-[#06090f] border border-slate-800 text-slate-400 hover:text-white transition cursor-pointer flex items-center gap-2 text-xs font-bold">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    بازگشت به داشبورد
+                </button>
+                <span id="matrix-remaining-counter" class="text-xs font-mono font-bold text-purple-400 tracking-widest">MATRIX ENGINE</span>
+            </div>
+
+            <div class="metal-deck p-4 md:p-8 rounded-[36px] space-y-6 border border-purple-500/20 shadow-2xl flex flex-col items-center">
+                <div class="w-full aspect-square max-w-[280px] md:max-w-[320px] rounded-2xl border border-slate-800/80 overflow-hidden shadow-2xl relative bg-[#04060b]">
+                    <img id="game-real-image" src="" alt="Matrix Concept Image" class="w-full h-full object-cover transition-all duration-500">
+                </div>
+
+                <div class="w-full border border-slate-800 bg-[#04070d]/60 rounded-2xl p-4 md:p-5 space-y-4 text-center">
+                    <div>
+                        <p id="sentence-en-box" class="text-base md:text-xl font-bold text-white tracking-wide font-sans leading-relaxed" dir="ltr">Loading...</p>
+                    </div>
+                    <div class="w-full h-[1px] bg-slate-800/80"></div>
+                    <div>
+                        <p id="sentence-fa-box" class="text-xs md:text-base text-slate-400 font-medium leading-relaxed">Loading...</p>
+                    </div>
+                </div>
+
+                <div id="sentence-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full pt-2"></div>
+            </div>
+        </section>
+
+        <section id="learning-view" class="hidden max-w-xl mx-auto space-y-6">
+            <div class="flex justify-between items-center">
+                <button onclick="exitToDashboard()" class="text-xs font-bold text-slate-500 hover:text-white cursor-pointer">← انصراف</button>
+                <span class="text-xs font-mono font-bold text-[#a3e635]" id="learn-progress-counter">WORD 1 OF 4</span>
+            </div>
+
+            <div class="flip-container w-full h-[360px] md:h-[420px]">
+                <div id="flip-card-inner" class="flip-card-inner w-full h-full relative">
+                    <div onclick="flipToBackDirectly()" class="card-front metal-deck p-6 md:p-10 rounded-[36px] flex flex-col justify-between items-center border border-[#17223b] cursor-pointer">
+                        <div class="w-full flex justify-between items-center">
+                            <span id="card-rank" class="text-xs font-mono text-slate-600 tracking-widest">RANK #1</span>
+                            <button onclick="triggerAudio('card-word', event)" class="p-2.5 rounded-xl bg-[#04060b] border border-slate-800 text-slate-400 hover:text-[#a3e635] transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                            </button>
+                        </div>
+                        <h2 id="card-word" class="text-3xl md:text-4xl font-black text-white cyber-word-font tracking-widest">WORD</h2>
+                        <span class="text-xs text-slate-500">لمس جهت مشاهده معنی فارسی</span>
+                    </div>
+
+                    <div onclick="flipToFrontDirectly()" class="card-back bg-[#050912] border border-blue-500/20 rounded-[36px] p-6 md:p-8 flex flex-col justify-between text-right cursor-pointer">
+                        <div class="w-full flex justify-between items-center">
+                            <span class="text-[10px] font-mono text-blue-400 font-bold">DATA MODULE</span>
+                            <button onclick="triggerAudio('card-word', event)" class="p-2.5 rounded-xl bg-[#04060b] border border-slate-800 text-slate-400 hover:text-blue-400 transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                            </button>
+                        </div>
+                        <div class="bg-[#080e1a] border border-[#141f36] p-4 md:p-5 rounded-2xl my-auto">
+                            <h2 id="card-translation" class="text-2xl md:text-3xl font-black text-white">معنی فارسی</h2>
+                        </div>
+                        <div class="space-y-2 bg-[#020408]/60 p-4 rounded-xl" dir="ltr">
+                            <p id="card-example-en" class="text-slate-200 text-xs md:text-sm font-sans font-bold"></p>
+                            <p id="card-example-fa" class="text-slate-400 text-[11px] md:text-xs font-medium text-right" dir="rtl"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3 md:gap-4">
+                <button id="btn-unlearned" onclick="markWordStatus(false)" class="hidden flex-1 py-4 rounded-xl bg-rose-600 text-white font-black text-center shadow-lg hover:bg-rose-500 transition text-sm cursor-pointer">
+                    یاد نگرفتم ✕
+                </button>
+                <button id="learn-action-btn" onclick="handleSmartFlowNext()" class="flex-1 py-4 rounded-xl bg-[#a3e635] text-black font-black text-center shadow-lg hover:bg-[#bbf746] transition text-sm cursor-pointer">
+                    مشاهده معنی فارسی ←
+                </button>
+            </div>
+        </section>
+
+        <section id="exam-view" class="hidden max-w-2xl mx-auto space-y-5">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-black text-rose-500 tracking-wider font-mono">MATRIX EXAM</span>
+                <span class="text-xs font-mono text-slate-500 font-bold" id="exam-progress-counter">QUESTION 1 OF 4</span>
+            </div>
+
+            <div class="metal-deck p-6 md:p-8 rounded-[36px] space-y-6 shadow-2xl relative">
+                <div class="flex justify-between items-center w-full">
+                    <span class="text-[10px] text-slate-600 font-mono font-bold">VOCABULARY CHALLENGE</span>
+                    <button onclick="triggerAudio('exam-question-word', event)" class="p-2.5 rounded-xl bg-[#04060b] border border-slate-800 text-slate-400 hover:text-rose-500 transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                    </button>
+                </div>
+                <div class="text-center pb-2">
+                    <h2 id="exam-question-word" class="text-2xl md:text-3xl font-black text-white cyber-word-font tracking-widest">CONSTANT</h2>
+                </div>
+                <div id="exam-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 pt-2"></div>
+                <div id="cheat-hint-box" class="hidden bg-amber-950/20 border border-amber-500/20 p-4 rounded-xl text-amber-300 text-xs text-right"></div>
+                <div class="flex justify-center pt-2">
+                    <button onclick="triggerCheatSystem()" class="bg-[#0c1220] hover:bg-[#16223d] border border-slate-700 p-3 rounded-full text-white transition cursor-pointer shadow-md">
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
     </div>
 	<script>
-        // مانیتورینگ متغیر کلمات لوکال از فایل words.js
-        let words = [];
-        let currentCardIndex = 0;
-        let isFlipped = false;
-        
-        // وضعیت مینی گیم ماتریکس
-        let selectedEn = null;
-        let selectedFa = null;
-        let matrixScore = 0;
+        const _SU_URL = "https://kimctghjdgyqnqmsopfe.supabase.co";
+        const _SU_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWN0Z2hqZGd5cW5xbXNvcGZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTA2ODEsImV4cCI6MjA5NjE2NjY4MX0.Pa4hotBxR6FGU7da7h76sW8q1lyBOMEhImGZojAeSbY";
+        const supabaseClient = supabase.createClient(_SU_URL, _SU_KEY);
 
-        // وضعیت آزمون
-        let currentQuizIndex = 0;
-        let quizCorrect = 0;
-        let quizWrong = 0;
-        let quizWords = [];
+        // آرایه کلمات محلی - فقط یک کلمه به عنوان الگو نگه داشته شد؛ کلمات اصلی شما از words.js خوانده می‌شوند.
+        const wordDatabase = [
+	        { id: "1", word: "Be", faTranslation: "بودن", partOfSpeech: "Verb", frequencyRank: 1, exampleEn: "I want to be happy.", exampleFa: "من می‌خواهم خوشحال باشم.", hint: "وجود داشتن", sentenceEn: "I want to ____ successful.", sentenceFa: "من می‌خواهم ____ موفق باشم.", imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" }
+        ];
 
-        // اجرای اولیه پس از لود صفحه
-        window.addEventListener('DOMContentLoaded', () => {
-            // چک کردن اینکه آیا دیتابیس خارجی لود شده است یا خیر
-            if (typeof wordDatabase !== 'undefined' && Array.isArray(wordDatabase)) {
-                words = wordDatabase;
-                showToast("اطلاعات کلمات با موفقیت از فایل خارجی بارگذاری شد.", "success");
-            } else {
-                showToast("خطا: فایل words.js یافت نشد یا ساختار آرایه صحیح نیست.", "error");
-                words = [];
+        let activeSessionWords = [];
+        let currentFlowIndex = 0;
+        let flowMode = 'learn'; 
+        let currentQuizItem = null;
+        let currentUserUUID = null;
+
+        let appState = {
+            learnedIds: [],
+            playedMatrixIds: [],
+            xp: 0,
+            streak: 0
+        };
+
+        async function initApp() {
+            // ترکیب خودکار کلمات لوکال و دیتابیس خارجی در صورت وجود
+            if (typeof externalWordDatabase !== 'undefined' && Array.isArray(externalWordDatabase)) {
+                wordDatabase.push(...externalWordDatabase);
             }
             
-            updateDashboardStats();
-            initFlashcard();
-            initMatrixGame();
-            initQuiz();
-        });
-
-        // مدیریت لایه نوتیفیکیشن زیباتر به جای آلرت‌های مزاحم سیستم عامل
-        function showToast(message, type = "info") {
-            const toast = document.getElementById('toast');
-            const msgEl = document.getElementById('toastMessage');
-            const iconEl = document.getElementById('toastIcon');
-            
-            msgEl.innerText = message;
-            
-            if(type === "success") {
-                iconEl.className = "fa-solid fa-circle-check text-emerald-400";
-            } else if (type === "error") {
-                iconEl.className = "fa-solid fa-triangle-exclamation text-rose-400";
-            } else {
-                iconEl.className = "fa-solid fa-circle-info text-indigo-400";
-            }
-            
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        // سوئیچ بین تب‌ها با اعمال کلاس اکتیو به شیوه مدرن
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`${tabId}-section`).classList.remove('hidden');
-            
-            const buttons = document.querySelectorAll('nav button');
-            buttons.forEach(btn => {
-                btn.classList.remove('text-indigo-600', 'bg-indigo-50', 'lg:bg-indigo-50/50');
-                btn.classList.add('text-slate-600');
-            });
-            
-            const activeBtn = event.currentTarget;
-            if(activeBtn && activeBtn.tagName === 'BUTTON') {
-                activeBtn.classList.add('text-indigo-600', 'bg-indigo-50', 'lg:bg-indigo-50/50');
-                activeBtn.classList.remove('text-slate-600');
-            }
-        }
-
-        // به روزرسانی آمارهای اولیه داشبورد کاربری
-        function updateDashboardStats() {
-            document.getElementById('totalWordsCount').innerText = words.length;
-            document.getElementById('matrixScore').innerText = matrixScore;
-            const totalAnswered = quizCorrect + quizWrong;
-            const accuracy = totalAnswered > 0 ? Math.round((quizCorrect / totalAnswered) * 100) : 0;
-            document.getElementById('quizAccuracy').innerText = accuracy + "%";
-        }
-
-        // سیستم فلش‌کارت تفکیک شده کلمات
-        function initFlashcard() {
-            if (words.length === 0) return;
-            const current = words[currentCardIndex];
-            
-            document.getElementById('cardProgress').innerText = `کارت ${currentCardIndex + 1} از ${words.length}`;
-            document.getElementById('wordPos').innerText = current.partOfSpeech || 'N/A';
-            document.getElementById('wordEn').innerText = current.word;
-            document.getElementById('wordHint').innerText = current.hint || 'بدون راهنمایی';
-            document.getElementById('wordRank').innerText = `فراوانی: #${current.frequencyRank || '0'}`;
-            document.getElementById('wordFa').innerText = current.faTranslation;
-            document.getElementById('exEn').innerText = current.exampleEn || '';
-            document.getElementById('exFa').innerText = current.exampleFa || '';
-            
-            // بازگرداندن کارت به حالت اول در صورت تغییر کارت
-            isFlipped = false;
-            document.getElementById('flashcard-inner').style.transform = "rotateY(0deg)";
-        }
-
-        function flipCard() {
-            isFlipped = !isFlipped;
-            document.getElementById('flashcard-inner').style.transform = isFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
-        }
-
-        function nextCard() {
-            if (words.length === 0) return;
-            currentCardIndex = (currentCardIndex + 1) % words.length;
-            initFlashcard();
-        }
-
-        function prevCard() {
-            if (words.length === 0) return;
-            currentCardIndex = (currentCardIndex - 1 + words.length) % words.length;
-            initFlashcard();
-        }
-
-        function playVoice(e) {
-            e.stopPropagation();
-            if (words.length === 0) return;
-            const current = words[currentCardIndex];
-            const utterance = new SpeechSynthesisUtterance(current.word);
-            utterance.lang = 'en-US';
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // الگوریتم پیشرفته بازی ماتریکس هماهنگ کلمات انگلیسی و فارسی
-        function initMatrixGame() {
-            if (words.length < 4) {
-                document.getElementById('matrixEnCol').innerHTML = '<p class="text-xs text-slate-400">حداقل ۴ کلمه نیاز است.</p>';
-                return;
-            }
-            
-            // انتخاب ۴ کلمه تصادفی
-            const shuffled = [...words].sort(() => 0.5 - Math.random()).slice(0, 4);
-            const enWords = [...shuffled].sort(() => 0.5 - Math.random());
-            const faWords = [...shuffled].sort(() => 0.5 - Math.random());
-            
-            const enCol = document.getElementById('matrixEnCol');
-            const faCol = document.getElementById('matrixFaCol');
-            
-            enCol.innerHTML = '';
-            faCol.innerHTML = '';
-            
-            enWords.forEach(w => {
-                enCol.innerHTML += `<button onclick="selectMatrixItem(this, 'en', '${w.id}')" class="w-full text-left p-3 text-sm font-bold rounded-xl bg-white border border-slate-200 transition-all active:scale-[0.98] h-12 flex items-center justify-between" dir="ltr"><span>${w.word}</span></button>`;
-            });
-            
-            faWords.forEach(w => {
-                faCol.innerHTML += `<button onclick="selectMatrixItem(this, 'fa', '${w.id}')" class="w-full text-right p-3 text-xs sm:text-sm font-bold rounded-xl bg-white border border-slate-200 transition-all active:scale-[0.98] h-12 flex items-center justify-between"><span>${w.faTranslation}</span></button>`;
-            });
-            
-            selectedEn = null;
-            selectedFa = null;
-        }
-
-        function selectMatrixItem(btn, type, id) {
-            if(type === 'en') {
-                document.querySelectorAll('#matrixEnCol button').forEach(b => b.className = b.className.replace(/border-indigo-600|bg-indigo-50/g, 'border-slate-200 bg-white'));
-                if(selectedEn && selectedEn.id === id) { selectedEn = null; return; }
-                selectedEn = { id, btn };
-                btn.classList.add('border-indigo-600', 'bg-indigo-50');
-            } else {
-                document.querySelectorAll('#matrixFaCol button').forEach(b => b.className = b.className.replace(/border-indigo-600|bg-indigo-50/g, 'border-slate-200 bg-white'));
-                if(selectedFa && selectedFa.id === id) { selectedFa = null; return; }
-                selectedFa = { id, btn };
-                btn.classList.add('border-indigo-600', 'bg-indigo-50');
-            }
-            
-            // بررسی صحت اتصال دو آیتم
-            if(selectedEn && selectedFa) {
-                if(selectedEn.id === selectedFa.id) {
-                    selectedEn.btn.className = "w-full text-left p-3 text-sm font-bold rounded-xl bg-emerald-50 border border-emerald-400 text-emerald-700 h-12 flex items-center justify-between opacity-60 pointer-events-none";
-                    selectedFa.btn.className = "w-full text-right p-3 text-sm font-bold rounded-xl bg-emerald-50 border border-emerald-400 text-emerald-700 h-12 flex items-center justify-between opacity-60 pointer-events-none";
-                    matrixScore += 10;
-                    document.getElementById('gameScoreDisplay').innerText = `امتیاز: ${matrixScore}`;
-                    showToast("اتصال صحیح!", "success");
-                    updateDashboardStats();
-                } else {
-                    selectedEn.btn.className = selectedEn.btn.className.replace(/border-indigo-600|bg-indigo-50/g, 'border-slate-200 bg-white');
-                    selectedFa.btn.className = selectedFa.btn.className.replace(/border-indigo-600|bg-indigo-50/g, 'border-slate-200 bg-white');
-                    showToast("نادرست، دوباره تلاش کنید", "error");
-                }
-                selectedEn = null;
-                selectedFa = null;
-            }
-        }
-
-        // فرآیند اجرای آزمون ۴ گزینه‌ای آنلاین هوشمند
-        function initQuiz() {
-            if(words.length < 4) return;
-            quizWords = [...words].sort(() => 0.5 - Math.random()).slice(0, 10);
-            currentQuizIndex = 0;
-            quizCorrect = 0;
-            quizWrong = 0;
-            renderQuizQuestion();
-        }
-
-        function renderQuizQuestion() {
-            if(currentQuizIndex >= quizWords.length) {
-                showToast(`آزمون به پایان رسید! پاسخ‌های صحیح: ${quizCorrect}`, "success");
-                initQuiz();
-                return;
-            }
-            
-            const current = quizWords[currentQuizIndex];
-            document.getElementById('quizProgress').innerText = `سوال ${currentQuizIndex + 1} از ${quizWords.length}`;
-            document.getElementById('quizScoreDisplay').innerText = `صحیح: ${quizCorrect} / غلط: ${quizWrong}`;
-            document.getElementById('quizProgressBar').style.width = `${((currentQuizIndex) / quizWords.length) * 100}%`;
-            
-            document.getElementById('quizQuestion').innerText = current.sentenceEn || `${current.word} means:`;
-            document.getElementById('quizQuestionFa').innerText = current.sentenceFa || `معنی کلمه فوق را حدس بزنید.`;
-            
-            // ساخت گزینه‌ها (یکی درست و ۳ تا غلط تصادفی)
-            const distractors = words.filter(w => w.id !== current.id).sort(() => 0.5 - Math.random()).slice(0, 3);
-            const options = [...distractors, current].sort(() => 0.5 - Math.random());
-            
-            const optionsContainer = document.getElementById('quizOptions');
-            optionsContainer.innerHTML = '';
-            
-            options.forEach(opt => {
-                optionsContainer.innerHTML += `<button onclick="handleQuizAnswer(this, '${opt.id}', '${current.id}')" class="w-full p-4 text-sm font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl text-left transition-all active:scale-[0.99] hover:bg-slate-100 flex items-center justify-between" dir="ltr"><span>${opt.word}</span><i class="fa-solid fa-circle-notch text-slate-300 text-xs"></i></button>`;
-            });
-        }
-
-        function handleQuizAnswer(btn, selectedId, correctId) {
-            const buttons = document.querySelectorAll('#quizOptions button');
-            buttons.forEach(b => b.pointerEvents = 'none'); // غیرفعال کردن کلیک مجدد
-            
-            if(selectedId === correctId) {
-                btn.className = "w-full p-4 text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-400 rounded-xl text-left flex items-center justify-between";
-                btn.innerHTML += `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
-                quizCorrect++;
-            } else {
-                btn.className = "w-full p-4 text-sm font-bold text-rose-800 bg-rose-50 border border-rose-400 rounded-xl text-left flex items-center justify-between";
-                btn.innerHTML += `<i class="fa-solid fa-circle-xmark text-rose-500"></i>`;
-                quizWrong++;
+            const localUser = localStorage.getItem('wordflow_user');
+            if (localUser) {
+                const user = JSON.parse(localUser);
+                currentUserUUID = user.id;
+                document.getElementById('username-display').innerText = user.username;
+                document.getElementById('username-display').classList.remove('hidden');
+                document.getElementById('auth-status-dot').className = "absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-black";
+                document.getElementById('connection-status').innerText = "CLOUD SYNC ACTIVE";
+                document.getElementById('connection-status').className = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-md text-[10px] font-bold tracking-widest block w-max";
                 
-                // نشان دادن گزینه صحیح به کاربر
-                buttons.forEach(b => {
-                    if(b.getAttribute('onclick').includes(`'${correctId}', '${correctId}'`)) {
-                        b.className = "w-full p-4 text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-400 rounded-xl text-left flex items-center justify-between";
-                    }
-                });
+                await pullProfileFromCloud();
+            } else {
+                loadLocalProfile();
+            }
+            renderDashboard();
+        }
+
+        function loadLocalProfile() {
+            const savedState = localStorage.getItem('wordflow_local_state');
+            if (savedState) {
+                appState = JSON.parse(savedState);
+            }
+        }
+
+        function saveLocalProfile() {
+            if (!currentUserUUID) {
+                localStorage.setItem('wordflow_local_state', JSON.stringify(appState));
+            }
+        }
+
+        async function pullProfileFromCloud() {
+            if (!currentUserUUID) return;
+            try {
+                const { data: profile, error } = await supabaseClient
+                    .from('profiles')
+                    .select('xp, streak, learned_ids, played_matrix_ids')
+                    .eq('id', currentUserUUID)
+                    .single();
+
+                if (profile) {
+                    appState.xp = profile.xp || 0;
+                    appState.streak = profile.streak || 0;
+                    appState.learnedIds = profile.learned_ids || [];
+                    appState.playedMatrixIds = profile.played_matrix_ids || [];
+                }
+            } catch (e) {
+                loadLocalProfile();
+            }
+        }
+
+        async function pushProfileToCloud() {
+            saveLocalProfile();
+            if (!currentUserUUID) return;
+            try {
+                await supabaseClient
+                    .from('profiles')
+                    .update({
+                        xp: appState.xp,
+                        streak: appState.streak,
+                        learned_ids: appState.learnedIds,
+                        played_matrix_ids: appState.playedMatrixIds,
+                        updated_at: new Date()
+                    })
+                    .eq('id', currentUserUUID);
+            } catch (e) {}
+        }
+
+        function renderDashboard() {
+            document.getElementById('user-xp').innerText = appState.xp;
+            document.getElementById('user-streak').innerText = appState.streak;
+
+            const remaining = wordDatabase.filter(w => !appState.learnedIds.includes(w.id)).length;
+            document.getElementById('total-learned-counter').innerText = `Learned: ${appState.learnedIds.length} | Remaining: ${remaining}`;
+
+            const ratio = wordDatabase.length > 0 ? Math.round((appState.learnedIds.length / wordDatabase.length) * 100) : 0;
+            document.getElementById('completion-ratio-text').innerText = `${ratio}%`;
+            document.getElementById('completion-bar').style.width = `${ratio}%`;
+        }
+
+        function toggleAuthModal(show) {
+            const modal = document.getElementById('auth-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                if (currentUserUUID) {
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('logout-btn').classList.add('hidden');
+                }
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function switchAuthMode() {
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const mainBtn = document.getElementById('auth-main-btn');
+            const toggleBtn = document.getElementById('auth-toggle-mode');
+
+            if (mainBtn.innerText.trim() === 'ورود به ماتریکس') {
+                title.innerText = 'ثبت نام حساب کاربری';
+                desc.innerText = 'یک نام کاربری و رمز عبور جدید بسازید.';
+                mainBtn.innerText = 'ایجاد حساب کاربری';
+                toggleBtn.innerText = 'قبلا ثبت نام کرده‌اید؟ وارد شوید';
+            } else {
+                title.innerText = 'ورود به حساب کاربری';
+                desc.innerText = 'نام کاربری و رمز عبور خود را وارد کنید.';
+                mainBtn.innerText = 'ورود به ماتریکس';
+                toggleBtn.innerText = 'حساب کاربری ندارید؟ ثبت نام کنید';
+            }
+        }
+
+        async function handleSubmitAuth() {
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const isLogin = document.getElementById('auth-main-btn').innerText.trim() === 'ورود به ماتریکس';
+
+            if (!username || !password) return;
+
+            if (isLogin) {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password_hash', password) 
+                    .single();
+
+                if (data) {
+                    localStorage.setItem('wordflow_user', JSON.stringify({ id: data.id, username: data.username }));
+                    toggleAuthModal(false);
+                    initApp();
+                }
+            } else {
+                const { data: existing } = await supabaseClient
+                    .from('profiles')
+                    .select('username')
+                    .eq('username', username)
+                    .single();
+
+                if (existing) return;
+
+                const { data: newUser, error } = await supabaseClient
+                    .from('profiles')
+                    .insert({
+                        username: username,
+                        password_hash: password,
+                        xp: appState.xp,
+                        streak: appState.streak,
+                        learned_ids: appState.learnedIds,
+                        played_matrix_ids: appState.playedMatrixIds
+                    })
+                    .select()
+                    .single();
+
+                if (newUser) {
+                    localStorage.setItem('wordflow_user', JSON.stringify({ id: newUser.id, username: newUser.username }));
+                    toggleAuthModal(false);
+                    initApp();
+                }
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('wordflow_user');
+            currentUserUUID = null;
+            document.getElementById('username-display').classList.add('hidden');
+            document.getElementById('auth-status-dot').className = "absolute bottom-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-black";
+            document.getElementById('connection-status').innerText = "OFFLINE MODE (CLICK AVATAR TO LOGIN)";
+            document.getElementById('connection-status').className = "bg-rose-500/10 text-rose-400 border border-rose-500/20 px-3 py-1 rounded-md text-[10px] font-bold tracking-widest block w-max";
+            toggleAuthModal(false);
+            appState = { learnedIds: [], playedMatrixIds: [], xp: 0, streak: 0 };
+            saveLocalProfile();
+            renderDashboard();
+        }
+
+        function startDailyFlow() {
+            const remainingWords = wordDatabase.filter(w => !appState.learnedIds.includes(w.id));
+            if (remainingWords.length === 0) {
+                return;
+            }
+            activeSessionWords = remainingWords.sort(() => 0.5 - Math.random()).slice(0, 4);
+            currentFlowIndex = 0;
+            flowMode = 'learn';
+
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('learning-view').classList.remove('hidden');
+            setupLearningCard();
+        }
+
+        function setupLearningCard() {
+            const word = activeSessionWords[currentFlowIndex];
+            document.getElementById('learn-progress-counter').innerText = `WORD ${currentFlowIndex + 1} OF ${activeSessionWords.length}`;
+            document.getElementById('card-rank').innerText = `RANK #${word.frequencyRank || 'N/A'}`;
+            document.getElementById('card-word').innerText = word.word;
+            document.getElementById('card-translation').innerText = word.faTranslation;
+            document.getElementById('card-example-en').innerText = word.exampleEn || '';
+            document.getElementById('card-example-fa').innerText = word.exampleFa || '';
+
+            document.getElementById('flip-card-inner').classList.remove('is-flipped');
+            document.getElementById('btn-unlearned').classList.add('hidden');
+            document.getElementById('learn-action-btn').innerText = "مشاهده معنی فارسی ←";
+            flowMode = 'learn';
+        }
+
+        function flipToBackDirectly() {
+            document.getElementById('flip-card-inner').classList.add('is-flipped');
+            document.getElementById('btn-unlearned').classList.remove('hidden');
+            document.getElementById('learn-action-btn').innerText = "یاد گرفتم و تایید ✓";
+            flowMode = 'verify';
+        }
+
+        function flipToFrontDirectly() {
+            document.getElementById('flip-card-inner').classList.remove('is-flipped');
+            document.getElementById('btn-unlearned').classList.add('hidden');
+            document.getElementById('learn-action-btn').innerText = "مشاهده معنی فارسی ←";
+            flowMode = 'learn';
+        }
+
+        async function handleSmartFlowNext() {
+            if (flowMode === 'learn') {
+                flipToBackDirectly();
+            } else {
+                await markWordStatus(true);
+            }
+        }
+
+        async function markWordStatus(isLearned) {
+            const word = activeSessionWords[currentFlowIndex];
+            if (isLearned) {
+                if (!appState.learnedIds.includes(word.id)) {
+                    appState.learnedIds.push(word.id);
+                    appState.xp += 15;
+                }
             }
             
-            updateDashboardStats();
-            setTimeout(() => {
-                currentQuizIndex++;
-                renderQuizQuestion();
-            }, 1500);
+            await pushProfileToCloud();
+            currentFlowIndex++;
+
+            if (currentFlowIndex < activeSessionWords.length) {
+                setupLearningCard();
+            } else {
+                appState.streak += 1;
+                await pushProfileToCloud();
+                exitToDashboard();
+            }
         }
+
+        function startExamFlow() {
+            if (appState.learnedIds.length < 4) {
+                return;
+            }
+            const learnedWords = wordDatabase.filter(w => appState.learnedIds.includes(w.id));
+            activeSessionWords = learnedWords.sort(() => 0.5 - Math.random()).slice(0, 4);
+            currentFlowIndex = 0;
+
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('exam-view').classList.remove('hidden');
+            setupExamQuestion();
+        }
+
+        function setupExamQuestion() {
+            const correctWord = activeSessionWords[currentFlowIndex];
+            document.getElementById('exam-progress-counter').innerText = `QUESTION ${currentFlowIndex + 1} OF ${activeSessionWords.length}`;
+            document.getElementById('exam-question-word').innerText = correctWord.word;
+            document.getElementById('cheat-hint-box').classList.add('hidden');
+
+            const distractors = wordDatabase.filter(w => w.id !== correctWord.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+            const options = [correctWord, ...distractors].sort(() => 0.5 - Math.random());
+
+            const grid = document.getElementById('exam-options-grid');
+            grid.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-center py-4 rounded-2xl border border-slate-800 bg-[#04060b] text-slate-300 font-bold text-sm hover:border-slate-700 transition cursor-pointer";
+                btn.innerText = opt.faTranslation;
+                btn.onclick = async () => {
+                    if (opt.id === correctWord.id) {
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-emerald-500 bg-emerald-950/40 text-emerald-400 font-bold text-sm cursor-not-allowed";
+                        appState.xp += 10;
+                        await pushProfileToCloud();
+                        setTimeout(() => {
+                            currentFlowIndex++;
+                            if (currentFlowIndex < activeSessionWords.length) {
+                                setupExamQuestion();
+                            } else {
+                                exitToDashboard();
+                            }
+                        }, 1200);
+                    } else {
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-rose-600 bg-rose-950/40 text-rose-400 font-bold text-sm cursor-not-allowed";
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function triggerCheatSystem() {
+            const correctWord = activeSessionWords[currentFlowIndex];
+            const hintBox = document.getElementById('cheat-hint-box');
+            hintBox.innerText = `راهنمایی کلمه: ${correctWord.hint || 'بدون راهنمایی ثبت شده'}`;
+            hintBox.classList.remove('hidden');
+        }
+
+        function switchToGameView() {
+            const pool = wordDatabase.filter(w => !appState.playedMatrixIds.includes(w.id));
+            if (pool.length === 0) {
+                appState.playedMatrixIds = [];
+            }
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            generateSentenceGameQuestion();
+        }
+
+        function generateSentenceGameQuestion() {
+            const pool = wordDatabase.filter(w => !appState.playedMatrixIds.includes(w.id));
+            const available = pool.length > 0 ? pool : wordDatabase;
+            
+            currentQuizItem = available[Math.floor(Math.random() * available.length)];
+            
+            document.getElementById('matrix-remaining-counter').innerText = `REMAINING: ${wordDatabase.filter(w => !appState.playedMatrixIds.includes(w.id)).length}`;
+            document.getElementById('game-real-image').src = currentQuizItem.imageUrl || "https://images.unsplash.com/photo-1546410531-bb4caa6b424d";
+            document.getElementById('sentence-en-box').innerText = currentQuizItem.sentenceEn || "No sentence dynamic available.";
+            document.getElementById('sentence-fa-box').innerText = currentQuizItem.sentenceFa || "";
+
+            const distractors = wordDatabase.filter(w => w.id !== currentQuizItem.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+            const options = [currentQuizItem, ...distractors].sort(() => 0.5 - Math.random());
+
+            const grid = document.getElementById('sentence-options-grid');
+            grid.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-center py-4 rounded-2xl border border-slate-800 bg-[#04060b]/80 text-white font-sans font-bold tracking-wide text-sm hover:border-purple-500/50 transition cursor-pointer";
+                btn.innerText = opt.word;
+                btn.onclick = async () => {
+                    if (opt.id === currentQuizItem.id) {
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-[#a3e635] bg-[#a3e635]/10 text-[#a3e635] font-black text-sm cursor-not-allowed";
+                        appState.xp += 20;
+                        
+                        if (!appState.playedMatrixIds.includes(currentQuizItem.id)) {
+                            appState.playedMatrixIds.push(currentQuizItem.id);
+                        }
+
+                        if (currentUserUUID) {
+                            await supabaseClient.from('matrix_game_history').insert({
+                                user_id: currentUserUUID,
+                                word_id: currentQuizItem.id
+                            });
+                            await pushProfileToCloud();
+                        }
+
+                        setTimeout(() => generateSentenceGameQuestion(), 1500);
+                    } else {
+                        btn.disabled = true;
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-rose-600 bg-rose-950/60 text-rose-400 opacity-50 font-black text-sm font-sans tracking-wide cursor-not-allowed";
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function exitToDashboard() {
+            document.getElementById('learning-view').classList.add('hidden');
+            document.getElementById('exam-view').classList.add('hidden');
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            renderDashboard();
+        }
+
+        function triggerAudio(elementId, event) {
+            event.stopPropagation(); 
+            const text = document.getElementById(elementId).innerText;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        initApp();
     </script>
 </body>
 </html>

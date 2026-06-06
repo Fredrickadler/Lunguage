@@ -300,3 +300,416 @@
         </section>
 
     </div>
+    <script>
+        const _SU_URL = "https://kimctghjdgyqnqmsopfe.supabase.co";
+        const _SU_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpbWN0Z2hqZGd5cW5xbXNvcGZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1OTA2ODEsImV4cCI6MjA5NjE2NjY4MX0.Pa4hotBxR6FGU7da7h76sW8q1lyBOMEhImGZojAeSbY";
+        const supabaseClient = supabase.createClient(_SU_URL, _SU_KEY);
+
+        // آرایه کلمات محلی - فقط یک کلمه به عنوان الگو نگه داشته شد؛ کلمات اصلی شما از words.js خوانده می‌شوند.
+        const wordDatabase = [
+	        { id: "1", word: "Be", faTranslation: "بودن", partOfSpeech: "Verb", frequencyRank: 1, exampleEn: "I want to be happy.", exampleFa: "من می‌خواهم خوشحال باشم.", hint: "وجود داشتن", sentenceEn: "I want to ____ successful.", sentenceFa: "من می‌خواهم ____ موفق باشم.", imageUrl: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" }
+        ];
+
+        let activeSessionWords = [];
+        let currentFlowIndex = 0;
+        let flowMode = 'learn'; 
+        let currentQuizItem = null;
+        let currentUserUUID = null;
+
+        let appState = {
+            learnedIds: [],
+            playedMatrixIds: [],
+            xp: 0,
+            streak: 0
+        };
+
+        async function initApp() {
+            // ترکیب خودکار کلمات لوکال و دیتابیس خارجی در صورت وجود
+            if (typeof externalWordDatabase !== 'undefined' && Array.isArray(externalWordDatabase)) {
+                wordDatabase.push(...externalWordDatabase);
+            }
+            
+            const localUser = localStorage.getItem('wordflow_user');
+            if (localUser) {
+                const user = JSON.parse(localUser);
+                currentUserUUID = user.id;
+                document.getElementById('username-display').innerText = user.username;
+                document.getElementById('username-display').classList.remove('hidden');
+                document.getElementById('auth-status-dot').className = "absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-black";
+                document.getElementById('connection-status').innerText = "CLOUD SYNC ACTIVE";
+                document.getElementById('connection-status').className = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-md text-[10px] font-bold tracking-widest block w-max";
+                
+                await pullProfileFromCloud();
+            } else {
+                loadLocalProfile();
+            }
+            renderDashboard();
+        }
+
+        function loadLocalProfile() {
+            const savedState = localStorage.getItem('wordflow_local_state');
+            if (savedState) {
+                appState = JSON.parse(savedState);
+            }
+        }
+
+        function saveLocalProfile() {
+            if (!currentUserUUID) {
+                localStorage.setItem('wordflow_local_state', JSON.stringify(appState));
+            }
+        }
+
+        async function pullProfileFromCloud() {
+            if (!currentUserUUID) return;
+            try {
+                const { data: profile, error } = await supabaseClient
+                    .from('profiles')
+                    .select('xp, streak, learned_ids, played_matrix_ids')
+                    .eq('id', currentUserUUID)
+                    .single();
+
+                if (profile) {
+                    appState.xp = profile.xp || 0;
+                    appState.streak = profile.streak || 0;
+                    appState.learnedIds = profile.learned_ids || [];
+                    appState.playedMatrixIds = profile.played_matrix_ids || [];
+                }
+            } catch (e) {
+                loadLocalProfile();
+            }
+        }
+
+        async function pushProfileToCloud() {
+            saveLocalProfile();
+            if (!currentUserUUID) return;
+            try {
+                await supabaseClient
+                    .from('profiles')
+                    .update({
+                        xp: appState.xp,
+                        streak: appState.streak,
+                        learned_ids: appState.learnedIds,
+                        played_matrix_ids: appState.playedMatrixIds,
+                        updated_at: new Date()
+                    })
+                    .eq('id', currentUserUUID);
+            } catch (e) {}
+        }
+
+        function renderDashboard() {
+            document.getElementById('user-xp').innerText = appState.xp;
+            document.getElementById('user-streak').innerText = appState.streak;
+
+            const remaining = wordDatabase.filter(w => !appState.learnedIds.includes(w.id)).length;
+            document.getElementById('total-learned-counter').innerText = `Learned: ${appState.learnedIds.length} | Remaining: ${remaining}`;
+
+            const ratio = wordDatabase.length > 0 ? Math.round((appState.learnedIds.length / wordDatabase.length) * 100) : 0;
+            document.getElementById('completion-ratio-text').innerText = `${ratio}%`;
+            document.getElementById('completion-bar').style.width = `${ratio}%`;
+        }
+
+        function toggleAuthModal(show) {
+            const modal = document.getElementById('auth-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                if (currentUserUUID) {
+                    document.getElementById('logout-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('logout-btn').classList.add('hidden');
+                }
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function switchAuthMode() {
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const mainBtn = document.getElementById('auth-main-btn');
+            const toggleBtn = document.getElementById('auth-toggle-mode');
+
+            if (mainBtn.innerText.trim() === 'ورود به ماتریکس') {
+                title.innerText = 'ثبت نام حساب کاربری';
+                desc.innerText = 'یک نام کاربری و رمز عبور جدید بسازید.';
+                mainBtn.innerText = 'ایجاد حساب کاربری';
+                toggleBtn.innerText = 'قبلا ثبت نام کرده‌اید؟ وارد شوید';
+            } else {
+                title.innerText = 'ورود به حساب کاربری';
+                desc.innerText = 'نام کاربری و رمز عبور خود را وارد کنید.';
+                mainBtn.innerText = 'ورود به ماتریکس';
+                toggleBtn.innerText = 'حساب کاربری ندارید؟ ثبت نام کنید';
+            }
+        }
+
+        async function handleSubmitAuth() {
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const isLogin = document.getElementById('auth-main-btn').innerText.trim() === 'ورود به ماتریکس';
+
+            if (!username || !password) return;
+
+            if (isLogin) {
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password_hash', password) 
+                    .single();
+
+                if (data) {
+                    localStorage.setItem('wordflow_user', JSON.stringify({ id: data.id, username: data.username }));
+                    toggleAuthModal(false);
+                    initApp();
+                }
+            } else {
+                const { data: existing } = await supabaseClient
+                    .from('profiles')
+                    .select('username')
+                    .eq('username', username)
+                    .single();
+
+                if (existing) return;
+
+                const { data: newUser, error } = await supabaseClient
+                    .from('profiles')
+                    .insert({
+                        username: username,
+                        password_hash: password,
+                        xp: appState.xp,
+                        streak: appState.streak,
+                        learned_ids: appState.learnedIds,
+                        played_matrix_ids: appState.playedMatrixIds
+                    })
+                    .select()
+                    .single();
+
+                if (newUser) {
+                    localStorage.setItem('wordflow_user', JSON.stringify({ id: newUser.id, username: newUser.username }));
+                    toggleAuthModal(false);
+                    initApp();
+                }
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('wordflow_user');
+            currentUserUUID = null;
+            document.getElementById('username-display').classList.add('hidden');
+            document.getElementById('auth-status-dot').className = "absolute bottom-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-black";
+            document.getElementById('connection-status').innerText = "OFFLINE MODE (CLICK AVATAR TO LOGIN)";
+            document.getElementById('connection-status').className = "bg-rose-500/10 text-rose-400 border border-rose-500/20 px-3 py-1 rounded-md text-[10px] font-bold tracking-widest block w-max";
+            toggleAuthModal(false);
+            appState = { learnedIds: [], playedMatrixIds: [], xp: 0, streak: 0 };
+            saveLocalProfile();
+            renderDashboard();
+        }
+
+        function startDailyFlow() {
+            const remainingWords = wordDatabase.filter(w => !appState.learnedIds.includes(w.id));
+            if (remainingWords.length === 0) {
+                return;
+            }
+            activeSessionWords = remainingWords.sort(() => 0.5 - Math.random()).slice(0, 4);
+            currentFlowIndex = 0;
+            flowMode = 'learn';
+
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('learning-view').classList.remove('hidden');
+            setupLearningCard();
+        }
+
+        function setupLearningCard() {
+            const word = activeSessionWords[currentFlowIndex];
+            document.getElementById('learn-progress-counter').innerText = `WORD ${currentFlowIndex + 1} OF ${activeSessionWords.length}`;
+            document.getElementById('card-rank').innerText = `RANK #${word.frequencyRank || 'N/A'}`;
+            document.getElementById('card-word').innerText = word.word;
+            document.getElementById('card-translation').innerText = word.faTranslation;
+            document.getElementById('card-example-en').innerText = word.exampleEn || '';
+            document.getElementById('card-example-fa').innerText = word.exampleFa || '';
+
+            document.getElementById('flip-card-inner').classList.remove('is-flipped');
+            document.getElementById('btn-unlearned').classList.add('hidden');
+            document.getElementById('learn-action-btn').innerText = "مشاهده معنی فارسی ←";
+            flowMode = 'learn';
+        }
+
+        function flipToBackDirectly() {
+            document.getElementById('flip-card-inner').classList.add('is-flipped');
+            document.getElementById('btn-unlearned').classList.remove('hidden');
+            document.getElementById('learn-action-btn').innerText = "یاد گرفتم و تایید ✓";
+            flowMode = 'verify';
+        }
+
+        function flipToFrontDirectly() {
+            document.getElementById('flip-card-inner').classList.remove('is-flipped');
+            document.getElementById('btn-unlearned').classList.add('hidden');
+            document.getElementById('learn-action-btn').innerText = "مشاهده معنی فارسی ←";
+            flowMode = 'learn';
+        }
+
+        async function handleSmartFlowNext() {
+            if (flowMode === 'learn') {
+                flipToBackDirectly();
+            } else {
+                await markWordStatus(true);
+            }
+        }
+
+        async function markWordStatus(isLearned) {
+            const word = activeSessionWords[currentFlowIndex];
+            if (isLearned) {
+                if (!appState.learnedIds.includes(word.id)) {
+                    appState.learnedIds.push(word.id);
+                    appState.xp += 15;
+                }
+            }
+            
+            await pushProfileToCloud();
+            currentFlowIndex++;
+
+            if (currentFlowIndex < activeSessionWords.length) {
+                setupLearningCard();
+            } else {
+                appState.streak += 1;
+                await pushProfileToCloud();
+                exitToDashboard();
+            }
+        }
+
+        function startExamFlow() {
+            if (appState.learnedIds.length < 4) {
+                return;
+            }
+            const learnedWords = wordDatabase.filter(w => appState.learnedIds.includes(w.id));
+            activeSessionWords = learnedWords.sort(() => 0.5 - Math.random()).slice(0, 4);
+            currentFlowIndex = 0;
+
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('exam-view').classList.remove('hidden');
+            setupExamQuestion();
+        }
+
+        function setupExamQuestion() {
+            const correctWord = activeSessionWords[currentFlowIndex];
+            document.getElementById('exam-progress-counter').innerText = `QUESTION ${currentFlowIndex + 1} OF ${activeSessionWords.length}`;
+            document.getElementById('exam-question-word').innerText = correctWord.word;
+            document.getElementById('cheat-hint-box').classList.add('hidden');
+
+            const distractors = wordDatabase.filter(w => w.id !== correctWord.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+            const options = [correctWord, ...distractors].sort(() => 0.5 - Math.random());
+
+            const grid = document.getElementById('exam-options-grid');
+            grid.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-center py-4 rounded-2xl border border-slate-800 bg-[#04060b] text-slate-300 font-bold text-sm hover:border-slate-700 transition cursor-pointer";
+                btn.innerText = opt.faTranslation;
+                btn.onclick = async () => {
+                    if (opt.id === correctWord.id) {
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-emerald-500 bg-emerald-950/40 text-emerald-400 font-bold text-sm cursor-not-allowed";
+                        appState.xp += 10;
+                        await pushProfileToCloud();
+                        setTimeout(() => {
+                            currentFlowIndex++;
+                            if (currentFlowIndex < activeSessionWords.length) {
+                                setupExamQuestion();
+                            } else {
+                                exitToDashboard();
+                            }
+                        }, 1200);
+                    } else {
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-rose-600 bg-rose-950/40 text-rose-400 font-bold text-sm cursor-not-allowed";
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function triggerCheatSystem() {
+            const correctWord = activeSessionWords[currentFlowIndex];
+            const hintBox = document.getElementById('cheat-hint-box');
+            hintBox.innerText = `راهنمایی کلمه: ${correctWord.hint || 'بدون راهنمایی ثبت شده'}`;
+            hintBox.classList.remove('hidden');
+        }
+
+        function switchToGameView() {
+            const pool = wordDatabase.filter(w => !appState.playedMatrixIds.includes(w.id));
+            if (pool.length === 0) {
+                appState.playedMatrixIds = [];
+            }
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            generateSentenceGameQuestion();
+        }
+
+        function generateSentenceGameQuestion() {
+            const pool = wordDatabase.filter(w => !appState.playedMatrixIds.includes(w.id));
+            const available = pool.length > 0 ? pool : wordDatabase;
+            
+            currentQuizItem = available[Math.floor(Math.random() * available.length)];
+            
+            document.getElementById('matrix-remaining-counter').innerText = `REMAINING: ${wordDatabase.filter(w => !appState.playedMatrixIds.includes(w.id)).length}`;
+            document.getElementById('game-real-image').src = currentQuizItem.imageUrl || "https://images.unsplash.com/photo-1546410531-bb4caa6b424d";
+            document.getElementById('sentence-en-box').innerText = currentQuizItem.sentenceEn || "No sentence dynamic available.";
+            document.getElementById('sentence-fa-box').innerText = currentQuizItem.sentenceFa || "";
+
+            const distractors = wordDatabase.filter(w => w.id !== currentQuizItem.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+            const options = [currentQuizItem, ...distractors].sort(() => 0.5 - Math.random());
+
+            const grid = document.getElementById('sentence-options-grid');
+            grid.innerHTML = '';
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-center py-4 rounded-2xl border border-slate-800 bg-[#04060b]/80 text-white font-sans font-bold tracking-wide text-sm hover:border-purple-500/50 transition cursor-pointer";
+                btn.innerText = opt.word;
+                btn.onclick = async () => {
+                    if (opt.id === currentQuizItem.id) {
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-[#a3e635] bg-[#a3e635]/10 text-[#a3e635] font-black text-sm cursor-not-allowed";
+                        appState.xp += 20;
+                        
+                        if (!appState.playedMatrixIds.includes(currentQuizItem.id)) {
+                            appState.playedMatrixIds.push(currentQuizItem.id);
+                        }
+
+                        if (currentUserUUID) {
+                            await supabaseClient.from('matrix_game_history').insert({
+                                user_id: currentUserUUID,
+                                word_id: currentQuizItem.id
+                            });
+                            await pushProfileToCloud();
+                        }
+
+                        setTimeout(() => generateSentenceGameQuestion(), 1500);
+                    } else {
+                        btn.disabled = true;
+                        btn.className = "w-full text-center py-4 rounded-2xl border border-rose-600 bg-rose-950/60 text-rose-400 opacity-50 font-black text-sm font-sans tracking-wide cursor-not-allowed";
+                    }
+                };
+                grid.appendChild(btn);
+            });
+        }
+
+        function exitToDashboard() {
+            document.getElementById('learning-view').classList.add('hidden');
+            document.getElementById('exam-view').classList.add('hidden');
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            renderDashboard();
+        }
+
+        function triggerAudio(elementId, event) {
+            event.stopPropagation(); 
+            const text = document.getElementById(elementId).innerText;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        initApp();
+    </script>
+</body>
+</html>

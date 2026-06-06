@@ -98,7 +98,7 @@ const wordDatabase = [
 { id: 97, word: “give”, fa: “دادن” },
 { id: 98, word: “day”, fa: “روز” },
 { id: 99, word: “most”, fa: “بیشتر” },
-{ id: 100, word: “us”, fa: “ما” }
+{ id: 100, word: “us”, fa: “ما” } ,
 { id: 101, word: “man”, fa: “مرد” },
 { id: 102, word: “woman”, fa: “زن” },
 { id: 103, word: “child”, fa: “کودک” },
@@ -198,7 +198,7 @@ const wordDatabase = [
 { id: 197, word: “music”, fa: “موسیقی” },
 { id: 198, word: “market”, fa: “بازار” },
 { id: 199, word: “sense”, fa: “حس” },
-{ id: 200, word: “nation”, fa: “ملت”
+{ id: 200, word: “nation”, fa: “ملت”},
 { id: 201, word: “plan”, fa: “برنامه” },
 { id: 202, word: “college”, fa: “دانشگاه” },
 { id: 203, word: “interest”, fa: “علاقه” },
@@ -398,7 +398,7 @@ const wordDatabase = [
 { id: 397, word: “fine”, fa: “خوب” },
 { id: 398, word: “before”, fa: “قبل از” },
 { id: 399, word: “near”, fa: “نزدیک” },
-{ id: 400, word: “movement”, fa: “حرکت” }
+{ id: 400, word: “movement”, fa: “حرکت” },
 { id: 401, word: “account”, fa: “حساب” },
 { id: 402, word: “management”, fa: “مدیریت” },
 { id: 403, word: “computer”, fa: “رایانه” },
@@ -498,7 +498,7 @@ const wordDatabase = [
 { id: 497, word: “control”, fa: “کنترل” },
 { id: 498, word: “base”, fa: “پایه” },
 { id: 499, word: “pain”, fa: “درد” },
-{ id: 500, word: “apply”, fa: “اعمال کردن” }
+{ id: 500, word: “apply”, fa: “اعمال کردن” },
 { id: 501, word: “machine”, fa: “ماشین” },
 { id: 502, word: “approach”, fa: “رویکرد” },
 { id: 503, word: “size”, fa: “اندازه” },
@@ -598,7 +598,7 @@ const wordDatabase = [
 { id: 597, word: “economic”, fa: “اقتصادی” },
 { id: 598, word: “cup”, fa: “فنجان” },
 { id: 599, word: “adult”, fa: “بزرگسال” },
-{ id: 600, word: “positive”, fa: “مثبت”
+{ id: 600, word: “positive”, fa: “مثبت”},
 { id: 601, word: “investment”, fa: “سرمایه‌گذاری” },
 { id: 602, word: “population”, fa: “جمعیت” },
 { id: 603, word: “capital”, fa: “سرمایه/پایتخت” },
@@ -698,7 +698,7 @@ const wordDatabase = [
 { id: 697, word: “ability”, fa: “توانایی” },
 { id: 698, word: “adventure”, fa: “ماجراجویی” },
 { id: 699, word: “airport”, fa: “فرودگاه” },
-{ id: 700, word: “apartment”, fa: “آپا
+{ id: 700, word: “apartment”, fa: “آپا”},
 { id: 701, word: “application”, fa: “برنامه/درخواست” },
 { id: 702, word: “arrival”, fa: “ورود” },
 { id: 703, word: “assistant”, fa: “دستیار” },
@@ -798,7 +798,7 @@ const wordDatabase = [
 { id: 797, word: “lifestyle”, fa: “سبک زندگی” },
 { id: 798, word: “location”, fa: “موقعیت” },
 { id: 799, word: “machine”, fa: “ماشین” },
-{ id: 800, word: “magazine”, fa: “مجله
+{ id: 800, word: “magazine”, fa: “مجله” },
 { id: 801, word: “manager”, fa: “مدیر” },
 { id: 802, word: “marketing”, fa: “بازاریابی” },
 { id: 803, word: “marriage”, fa: “ازدواج” },
@@ -898,7 +898,7 @@ const wordDatabase = [
 { id: 897, word: “publication”, fa: “انتشار” },
 { id: 898, word: “purpose”, fa: “هدف” },
 { id: 899, word: “quality”, fa: “کیفیت” },
-{ id: 900, word: “quantity”, fa: “مقدا
+{ id: 900, word: “quantity”, fa: “مقدا” },
 { id: 901, word: “question”, fa: “سؤال” },
 { id: 902, word: “queue”, fa: “صف” },
 { id: 903, word: “radio”, fa: “رادیو” },
@@ -998,4 +998,6 @@ const wordDatabase = [
 { id: 997, word: “winner”, fa: “برنده” },
 { id: 998, word: “worker”, fa: “کارگر” },
 { id: 999, word: “world”, fa: “جهان” },
-{ id: 1000, word: “writer”, fa: “نوی” },]
+{ id: 1000, word: “writer”, fa: “نوی” },
+
+];

@@ -51,6 +51,7 @@
 </head>
 <body class="p-3 md:p-8 flex flex-col items-center justify-start relative antialiased select-none w-full max-w-full overflow-x-hidden">
 
+    <!-- بک‌گراندهای گرادینت بهینه‌شده برای موبایل -->
     <div class="absolute top-0 right-0 w-[300px] md:w-[600px] h-[300px] md:h-[500px] rounded-full bg-blue-600/5 blur-[80px] md:blur-[150px] pointer-events-none"></div>
     <div class="absolute bottom-0 left-0 w-[300px] md:w-[600px] h-[300px] md:h-[500px] rounded-full bg-[#a3e635]/5 blur-[80px] md:blur-[150px] pointer-events-none"></div>
 
@@ -88,7 +89,7 @@
                 <div class="space-y-4">
                     <div class="space-y-1">
                         <label class="text-xs text-slate-400 font-bold">نام کاربری</label>
-                        <input id="auth-username" type="text" placeholder="مثلا: reza_cyber" class="w-full bg-[#04060b] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-[#a3e635] text-left font-mono" dir="ltr">
+                        <input id="auth-username" type="text" placeholder="مثلا: REZA_CYBER" class="w-full bg-[#04060b] border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-[#a3e635] text-left font-mono" dir="ltr">
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs text-slate-400 font-bold">رمز عبور</label>
@@ -316,7 +317,7 @@
             { id: "3", word: "Do", faTranslation: "انجام دادن", partOfSpeech: "Verb", frequencyRank: 3, exampleEn: "Do your homework.", exampleFa: "تکالیف خود را انجام بده.", hint: "انجام کار", sentenceEn: "Please ____ your task.", sentenceFa: "لطفاً وظیفه خود را ____.", imageUrl: "https://images.unsplash.com/photo-1493612276216-ee3925520721" },
             { id: "4", word: "Say", faTranslation: "گفتن", partOfSpeech: "Verb", frequencyRank: 4, exampleEn: "Say your name.", exampleFa: "نام خود را بگو.", hint: "بیان کردن", sentenceEn: "What did she ____?", sentenceFa: "او چه چیزی ____؟", imageUrl: "https://images.unsplash.com/photo-1515169067868-5387ec356754" },
             { id: "5", word: "Go", faTranslation: "رفتن", partOfSpeech: "Verb", frequencyRank: 5, exampleEn: "We go to school.", exampleFa: "ما به مدرسه می‌رویم.", hint: "حرکت کردن", sentenceEn: "Let's ____ home.", sentenceFa: "بیا ____ خانه.", imageUrl: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429" },
-            { id: "6", word: "Get", faTranslation: "گرفتن", partOfSpeech: "Verb", frequencyRank: 6, exampleEn: "I get the message.", exampleFa: "من پیام را دریافت می‌کنم.", hint: "دریافت کردن", sentenceEn: "Can you ____ this for me?", sentenceFa: "می‌توانی این را برای من ____؟", imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c" },
+            { id: "6", word: "Get", faTranslation: "گرفتن", partOfSpeech: "Verb", frequencyRank: 6, exampleEn: "I get the message.", exampleFa: "من پیام را دریافت می‌کنم.", hint: "دریافت کردن", sentenceEn: "Can you ____ this for me?", sentenceFa: "می‌توانی این را برای من ____?.", imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c" },
             { id: "7", word: "Make", faTranslation: "ساختن", partOfSpeech: "Verb", frequencyRank: 7, exampleEn: "They make toys.", exampleFa: "آن‌ها اسباب‌بازی می‌سازند.", hint: "ایجاد کردن", sentenceEn: "We will ____ a plan.", sentenceFa: "ما یک برنامه ____ خواهیم کرد.", imageUrl: "https://images.unsplash.com/photo-1517048676732-d65bc937f952" },
             { id: "8", word: "Know", faTranslation: "دانستن", partOfSpeech: "Verb", frequencyRank: 8, exampleEn: "I know the answer.", exampleFa: "من پاسخ را می‌دانم.", hint: "آگاه بودن", sentenceEn: "Do you ____ him?", sentenceFa: "آیا او را ____؟", imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a" },
             { id: "9", word: "Think", faTranslation: "فکر کردن", partOfSpeech: "Verb", frequencyRank: 9, exampleEn: "Think before speaking.", exampleFa: "قبل از صحبت فکر کن.", hint: "اندیشیدن", sentenceEn: "I ____ it is true.", sentenceFa: "من ____ می‌کنم درست است.", imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3" },
@@ -384,7 +385,6 @@
                 return;
             }
 
-            // فیکس بزرگ و کوچک بودن حروف: .toLowerCase() از روی فیلد اصلی برداشته شد تا شناسه ایمیل منطبق بر نام کاربری ثبت شده باشد.
             const virtualEmail = `${usernameInput}@wordflow.io`;
 
             if (authMode === "signup") {
@@ -684,14 +684,39 @@
             });
         }
 
+        /* ================= FIXED SPEECH SYNTHESIS SYSTEM ================= */
         function triggerAudio(elementId, event) {
-            event.stopPropagation(); 
-            const text = document.getElementById(elementId).innerText;
+            if (event) event.stopPropagation(); 
+            
+            const rawText = document.getElementById(elementId).innerText;
+            // حذف کاراکترهای اضافی که برای زیبایی دیزاین اضافه شده بودند
+            const cleanText = rawText.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+
             if ('speechSynthesis' in window) {
-                const utterance = new SynthesisUtterance(text);
+                // متوقف کردن تلفظ‌های قبلی برای جلوگیری از کرش یا تداخل
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'en-US';
+                utterance.rate = 0.85; // سرعت بهینه و خوانا برای آموزش
+                utterance.pitch = 1.0;
+
+                // پیدا کردن صدای نیتیو انگلیسی آمریکا در صورت وجود
+                const voices = window.speechSynthesis.getVoices();
+                const engVoice = voices.find(v => v.lang.startsWith('en-US') || v.lang.startsWith('en-'));
+                if (engVoice) {
+                    utterance.voice = engVoice;
+                }
+
                 window.speechSynthesis.speak(utterance);
+            } else {
+                alert("مرورگر شما از قابلیت تلفظ صوتی پشتیبانی نمی‌کند. لطفاً از کروم یا سافاری مدرن استفاده کنید.");
             }
+        }
+
+        // بیدارباش سیستم صوتی برای مرورگرهای موبایل (iOS/Android) که نیازمند لود اولیه لیست صداها هستند
+        if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+            window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
         }
 
         initApp();
